@@ -276,18 +276,29 @@ class nmjson{
         $Meting = new \Metowolf\Meting('netease');
         $cache = $this->get_cache($key);
         if( $cache ) return $cache;
+        //添加封面，多请求一次而已
         $url = "http://music.163.com/api/playlist/detail?id=" . $playlist_id;
+        $response_collect = $this->netease_http($url);
+        $collect_title = "";
+        $collect_cover="";
+        if( $response_collect["code"]==200 && $response_collect["result"] ){
+              $collect_title=$response_collect["result"]["name"];
+              $collect_cover=$response_collect["result"]["coverImgUrl"];
+        }
+        // 新重构的方式 ，只处理歌曲，封面木有
         $response = json_decode($Meting->format()->playlist($playlist_id), true);
         if (!empty($response[0])) {
             $result = $response;
             $count  = count($result);
             if ($count < 1) {
                 return false;
-            }
+            };
             $playlist = array(
                 "playlist_id" => $playlist_id,
                 "playlist_type" => "playlists",
-                "playlist_count" => $count
+                "playlist_count" => $count,
+                "collect_title" => $collect_title,
+                "collect_cover" => $collect_cover
             );
             foreach ($result as $k => $value) {
                 $mp3_url = admin_url() . "admin-ajax.php" . "?action=nmjson&type=song_url&id=" . $value["url_id"];
